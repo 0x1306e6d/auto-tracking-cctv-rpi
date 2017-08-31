@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'run-cctv-rpi = rpi.__main__:main'
+            'run-cctv-rpi = rpi.startup:start_from_command_line'
         ]
     }
 )
