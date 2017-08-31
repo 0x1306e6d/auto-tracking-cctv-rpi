@@ -27,6 +27,16 @@ class RPi(object):
         self.__init_camera()
         self.__init_connector()
 
+        self.try_connect_until_connected()
+
+    def try_connect_until_connected(self):
+        try:
+            self.__connector.try_connect()
+            logger.info('GatewayConnector is connected with {}'.
+                        format(self.__connector.address))
+        except:
+            self.try_connect_until_connected()
+
     def __init_camera(self):
         width = self.__args.width
         height = self.__args.height
