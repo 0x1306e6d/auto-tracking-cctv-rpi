@@ -1,6 +1,4 @@
-def main():
-    pass
-
+from rpi import startup
 
 if __name__ == '__main__':
-    main()
+    startup.start_from_command_line()
