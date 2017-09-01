@@ -1,4 +1,5 @@
 import logging
+import struct
 
 from rpi.config import (
     DEFAULT_CAMERA_WIDTH,
@@ -10,6 +11,7 @@ from rpi.config import (
 )
 from rpi.hw.camera import RPiCamera
 from rpi.net.connector import GatewayConnector
+from rpi.net.packet import Opcode, encode_packet
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,7 @@ class RPi(object):
         self.__init_connector()
 
         self.try_connect_until_connected()
+        self.send_device_info()
 
     def try_connect_until_connected(self):
         try:
@@ -37,6 +40,15 @@ class RPi(object):
                                self.__connector.remote_address))
         except:
             self.try_connect_until_connected()
+
+    def send_device_info(self):
+        logger.debug('Sending device info...')
+
+        body = struct.pack('!IIH',
+                           self.__camera.resolution[0],
+                           self.__camera.resolution[1],
+                           self.__camera.framerate)
+        self.__connector.send(encode_packet(Opcode.SETUP, body))
 
     def __init_camera(self):
         width = self.__args.width
@@ -71,5 +83,13 @@ class RPi(object):
         address = (ip, int(port))
 
         self.__connector = GatewayConnector(address=address)
+        self.__connector.register_handler(Opcode.RECORD, self.__on_record)
+        self.__connector.register_handler(Opcode.PAUSE, self.__on_pause)
         logger.debug('GatewayConnector is initialzed. connector = {}'.
                      format(self.__connector))
+
+    def __on_record(self, body):
+        logger.debug('OnRecord is called.')
+
+    def __on_pause(self, body):
+        logger.debug('OnPause is called.')
