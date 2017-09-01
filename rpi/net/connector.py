@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 class GatewayConnector(object):
     def __init__(self, address):
-        self.address = address
+        self.local_address = None
+        self.remote_address = address
         self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
         self.__socket.setsockopt(socket.SOL_SOCKET, socket.TCP_NODELAY, True)
@@ -21,10 +22,11 @@ class GatewayConnector(object):
         self.__send_thread.start()
 
     def try_connect(self):
-        logger.debug('Try to connect gateway at {}'.format(self.address))
+        logger.debug('Try to connect gateway at {}'.
+                     format(self.remote_address))
 
-        self.__socket.connect(self.address)
-        self.address = self.__socket.getsockname()
+        self.__socket.connect(self.remote_address)
+        self.local_address = self.__socket.getsockname()
 
     def send(self, packet):
         self.__send_queue.put(packet)
