@@ -2,6 +2,8 @@ import argparse
 import logging
 import os
 
+from rpi.app import RPi
+
 
 def configure_logging():
     format = '[%(asctime)s][%(threadName)s:%(module)s:%(funcName)s [%(lineno)d]]'
@@ -32,3 +34,4 @@ def parse_args():
 
 def start_from_command_line():
     configure_logging()
+    RPi(parse_args()).start()
