@@ -32,8 +32,9 @@ class RPi(object):
     def try_connect_until_connected(self):
         try:
             self.__connector.try_connect()
-            logger.info('GatewayConnector is connected with {}'.
-                        format(self.__connector.address))
+            logger.info('GatewayConnector is connected. ({} -> {})'.
+                        format(self.__connector.local_address,
+                               self.__connector.remote_address))
         except:
             self.try_connect_until_connected()
 
