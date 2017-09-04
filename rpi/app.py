@@ -89,7 +89,7 @@ class RPi(object):
                      format(self.__connector))
 
     def __on_record(self, body):
-        logger.debug('OnRecord is called.')
+        self.__camera.record(self.__connector)
 
     def __on_pause(self, body):
-        logger.debug('OnPause is called.')
+        self.__camera.pause()
