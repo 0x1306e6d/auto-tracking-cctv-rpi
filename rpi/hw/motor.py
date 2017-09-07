@@ -10,11 +10,11 @@ DIRECTION_DOWN = 0x02
 DIRECTION_LEFT = 0x04
 DIRECTION_RIGHT = 0x08
 
-INITIAL_DUTY_CYCLE = 14
-MINIMUM_DUTY_CYCLE = 1
-MAXIMUM_DUTY_CYCLE = 30
+INITIAL_DUTY_CYCLE = 7.5
+MINIMUM_DUTY_CYCLE = 3.0
+MAXIMUM_DUTY_CYCLE = 12.0
 
-MOVEMENT_TIME = 0.5
+MOVEMENT_TIME = 0.3
 MOVEMENT_FREQUENCY = 10
 
 
@@ -37,10 +37,10 @@ def _get_motor_gpio_number(direction):
 def _get_delta(direction):
     if direction == DIRECTION_UP or \
             direction == DIRECTION_RIGHT:
-        return 0.1
+        return 0.25
     elif direction == DIRECTION_DOWN or \
             direction == DIRECTION_LEFT:
-        return -0.1
+        return -0.25
 
 
 class RPiMotor(object):
@@ -53,28 +53,38 @@ class RPiMotor(object):
 
     def move(self, to):
         if self.is_my_direction(to):
+            logger.debug('Move RPiMotor from {} to {}'.format(self._duty_cycle, to))
             gpio_number = _get_motor_gpio_number(to)
 
             GPIO.setmode(GPIO.BOARD)
             GPIO.setup(gpio_number, GPIO.OUT)
-            pwm = GPIO.PWM(gpio_number, 100)
-            pwm.start(0)
+            pwm = GPIO.PWM(gpio_number, 50)
+            pwm.start(self._duty_cycle)
 
             try:
                 delta = _get_delta(to)
-                sleep_time = MOVEMENT_TIME / MOVEMENT_FREQUENCY
+                if delta < 0 and self._duty_cycle <= MINIMUM_DUTY_CYCLE:
+                    logger.info('minimum')
+                    return
+                if delta > 0 and self._duty_cycle >= MAXIMUM_DUTY_CYCLE:
+                    logger.info('maximum')
+                    return
 
-                for _ in range(MOVEMENT_FREQUENCY):
-                    if delta < 0 and self._duty_cycle <= MINIMUM_DUTY_CYCLE:
-                        logger.info('DutyCycle is not minimum value.')
-                        break
-                    if delta > 0 and self._duty_cycle >= MAXIMUM_DUTY_CYCLE:
-                        logger.info('DutyCycle is not maximum value.')
-                        break
+                self._duty_cycle += delta
+                pwm.ChangeDutyCycle(self._duty_cycle)
+                time.sleep(0.04)
 
-                    self._duty_cycle += delta
-                    pwm.ChangeDutyCycle(self._duty_cycle)
-                    time.sleep(sleep_time)
+#                for _ in range(MOVEMENT_FREQUENCY):
+#                    if delta < 0 and self._duty_cycle <= MINIMUM_DUTY_CYCLE:
+#                        logger.info('DutyCycle is not minimum value.')
+#                        break
+#                    if delta > 0 and self._duty_cycle >= MAXIMUM_DUTY_CYCLE:
+#                        logger.info('DutyCycle is not maximum value.')
+#                        break
+#
+#                    self._duty_cycle += delta
+#                    pwm.ChangeDutyCycle(self._duty_cycle)
+#                    time.sleep(sleep_time)
 
             finally:
                 pwm.stop()
