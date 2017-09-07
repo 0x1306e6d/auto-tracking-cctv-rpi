@@ -11,7 +11,9 @@ class Opcode(enum.Enum):
     MOVED = 0x21
 
 
-def encode_packet(opcode, body):
+def encode_packet(opcode, body=None):
+    if body is None:
+        body = bytes()
     opcode_size = struct.calcsize('!H')
     opcode = struct.pack('!H', opcode.value)
     body_size = len(body)
