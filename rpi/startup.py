@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 
+from rpi import util
 from rpi.app import RPi
 
 
@@ -33,5 +34,7 @@ def parse_args():
 
 
 def start_from_command_line():
-    configure_logging()
+    util.setup_logging_by_file()
+    logging.debug('Logging is configured.')
+
     RPi(parse_args()).start()
