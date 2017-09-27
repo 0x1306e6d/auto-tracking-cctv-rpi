@@ -9,7 +9,14 @@ from rpi.config import (
     DEFAULT_GATEWAY_IP,
     DEFAULT_GATEWAY_PORT,
 )
+from rpi.hw.motor import (
+    DIRECTION_UP,
+    DIRECTION_DOWN,
+    DIRECTION_LEFT,
+    DIRECTION_RIGHT
+)
 from rpi.hw.camera import RPiCamera
+from rpi.hw.motor import RPiMotor, is_valid_direction
 from rpi.net.connector import GatewayConnector
 from rpi.net.packet import Opcode, encode_packet
 
@@ -21,6 +28,14 @@ class RPi(object):
         self.__args = args
         self.__camera = None
         self.__connector = None
+        self._up_down_motor = RPiMotor(DIRECTION_UP | DIRECTION_DOWN)
+        self._left_right_motor = RPiMotor(DIRECTION_LEFT | DIRECTION_RIGHT)
+
+    def _get_motor_by_direction(self, direction):
+        if self._up_down_motor.is_my_direction(direction):
+            return self._up_down_motor
+        if self._left_right_motor.is_my_direction(direction):
+            return self._left_right_motor
 
     def start(self):
         logger.info('Starting auto tracking cctv rpi')
@@ -85,6 +100,7 @@ class RPi(object):
         self.__connector = GatewayConnector(address=address)
         self.__connector.register_handler(Opcode.RECORD, self.__on_record)
         self.__connector.register_handler(Opcode.PAUSE, self.__on_pause)
+        self.__connector.register_handler(Opcode.MOVE, self.__on_move)
         logger.debug('GatewayConnector is initialzed. connector = {}'.
                      format(self.__connector))
 
@@ -93,3 +109,14 @@ class RPi(object):
 
     def __on_pause(self, body):
         self.__camera.pause()
+
+    def __on_move(self, body):
+        body = struct.unpack('!H', body)
+        direction = body[0]
+
+        if is_valid_direction(direction):
+            motor = self._get_motor_by_direction(direction)
+            if motor is not None:
+                motor.move(direction)
+
+        self.__connector.send(encode_packet(Opcode.MOVED))
