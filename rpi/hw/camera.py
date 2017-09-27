@@ -22,6 +22,7 @@ class RPiCamera(object):
         self.recording = False
         self.__connector = None
         self.__camera = PiCamera(resolution=resolution, framerate=framerate)
+        self.__camera.rotation = 180
         self.__camera_thread = threading.Thread(target=self.__wait_recording,
                                                 name='rpi-camera-thread',
                                                 daemon=True)
